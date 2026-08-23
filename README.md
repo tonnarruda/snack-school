@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍎 School Snack Planner
 
-## Getting Started
+Aplicação web que monta o lanche escolar da semana (segunda a sexta) a partir dos
+alimentos disponíveis em casa. Implementa o [PRD](prd.md).
 
-First, run the development server:
+Roda **100% no navegador**: sem backend, banco de dados, login ou API de IA.
+Nenhuma informação sobre a criança ou os alimentos sai do dispositivo.
+
+## Como rodar
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Script              | O que faz                                    |
+| ------------------- | -------------------------------------------- |
+| `npm run dev`       | ambiente de desenvolvimento                  |
+| `npm run build`     | site estático em `out/` (deploy sem servidor) |
+| `npm test`          | testes das regras de domínio                 |
+| `npm run typecheck` | checagem de tipos                            |
+| `npm run lint`      | ESLint                                       |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Regra do lanche
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Cada dia tem **exatamente 2 frutas diferentes + 1 salgado OU doce**. Sem exceção.
 
-## Learn More
+O planejamento é **determinístico**: a mesma lista de alimentos sempre gera a
+mesma semana. As regras não dependem da interpretação de um modelo de IA.
 
-To learn more about Next.js, take a look at the following resources:
+- frutas: nunca iguais no mesmo dia, duplas não se repetem antes de esgotar as
+  demais e o uso é equilibrado entre as frutas informadas;
+- acompanhamentos: alternam salgado e doce quando possível e nunca repetem em
+  dias consecutivos se houver alternativa;
+- quando pão e queijo (ou outras combinações conhecidas) estão disponíveis, eles
+  contam como **um** acompanhamento: "Pão com queijo".
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Arquitetura
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+A lógica de negócio fica fora dos componentes React:
 
-## Deploy on Vercel
+```
+src/
+├── app/                  # rota única, estática
+├── components/           # Chat, FoodInput, UnknownFood, WeeklyPlan, SnackCard, Suggestions
+├── domain/               # tipos e regras: food, snack, plannerState (máquina de estados), messages
+├── services/             # foodParser, foodClassifier, snackPlanner, suggestionEngine, pdfGenerator
+└── data/                 # foods (catálogo + combinações), suggestions
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+O estado vive só em memória (`useReducer` sobre `plannerReducer`). Recarregar a
+página zera tudo — é o comportamento previsto no PRD §20.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Como estender
+
+**Novo alimento**: uma linha em [`src/data/foods.ts`](src/data/foods.ts).
+
+```ts
+{ name: "Melão", category: "fruit", emoji: "🍈", aliases: ["melao"] }
+```
+
+`aliases` cobre variações regionais e erros de digitação — a busca já ignora
+acentos e maiúsculas. `refrigerationRecommended: true` faz o item entrar no aviso
+de lancheira térmica.
+
+**Nova combinação** (dois itens que valem como um acompanhamento): `FOOD_COMBOS`,
+no mesmo arquivo. Frutas nunca são consumidas por combinações.
+
+**Nova sugestão**: [`src/data/suggestions.ts`](src/data/suggestions.ts), com
+`region` (`northeast` prioriza) e o motivo exibido ao usuário.
+
+Idade e localização ainda não são configuráveis, mas nada no domínio depende
+delas — a evolução prevista no PRD §5 não exige reescrever as regras.
+
+## Deploy
+
+`npm run build` gera `out/`, uma pasta estática que pode ser servida por
+qualquer hospedagem (Vercel, Netlify, GitHub Pages, S3).
