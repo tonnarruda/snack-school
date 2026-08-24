@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
+import { APP_NAME, TAGLINE } from "@/domain/messages";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -15,10 +16,10 @@ const baloo = Baloo_2({
 });
 
 export const metadata: Metadata = {
-  title: "School Snack Planner — Monte o lanche da semana",
+  title: `${APP_NAME} — ${TAGLINE}`,
   description:
     "Monte o planejamento de lanches escolares de segunda a sexta com os alimentos que você já tem em casa. Funciona 100% no navegador.",
-  applicationName: "School Snack Planner",
+  applicationName: APP_NAME,
   icons: {
     icon: [
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     // iOS não lê o manifest: abrir em tela cheia depende destas meta tags.
     capable: true,
-    title: "Lanche",
+    title: APP_NAME,
     statusBarStyle: "default",
   },
 };

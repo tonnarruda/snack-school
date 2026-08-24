@@ -1,4 +1,8 @@
-# 🍎 School Snack Planner
+<p align="center">
+  <img src="public/lancho-logo.png" alt="Lanchô — seu planejador de lancheiras da semana" width="320">
+</p>
+
+# Lanchô
 
 Aplicação web que monta o lanche escolar da semana (segunda a sexta) a partir dos
 alimentos disponíveis em casa. Implementa o [PRD](prd.md).
@@ -81,6 +85,17 @@ no mesmo arquivo. Frutas nunca são consumidas por combinações.
 
 Idade e localização ainda não são configuráveis, mas nada no domínio depende
 delas — a evolução prevista no PRD §5 não exige reescrever as regras.
+
+## Marca
+
+A logomarca vive em [`public/`](public/): `lancho-logo.png` é a arte completa e
+`lancho-mark.png` é só a lancheira — ela é o ícone do PWA, o favicon, o símbolo
+no topo da tela e o do cabeçalho do PDF. O letreiro "Lanchô" do cabeçalho é
+**texto**, colorido letra a letra com os tokens `--lancho-*` de
+[`globals.css`](src/app/globals.css), para ficar nítido em qualquer tamanho.
+
+Os ícones em `public/icons/` são derivados da marca; para regerá-los depois de
+trocar a arte, use o script guardado no histórico desta mudança (PIL/Pillow).
 
 ## PWA
 

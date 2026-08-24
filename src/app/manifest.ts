@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { APP_NAME, TAGLINE } from "@/domain/messages";
 
 // O manifest é uma rota; com `output: "export"` ela precisa ser estática.
 export const dynamic = "force-static";
@@ -9,8 +10,8 @@ export const dynamic = "force-static";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "School Snack Planner",
-    short_name: "Lanche",
+    name: `${APP_NAME} — ${TAGLINE}`,
+    short_name: APP_NAME,
     description:
       "Monte o planejamento de lanches escolares de segunda a sexta com os alimentos que você já tem em casa. Funciona 100% no navegador.",
     lang: "pt-BR",

@@ -8,7 +8,7 @@
  * Suba VERSION ao mudar este arquivo: caches de versões antigas são apagados
  * na ativação.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL_CACHE = `snack-school-shell-${VERSION}`;
 const ASSET_CACHE = `snack-school-assets-${VERSION}`;
 
@@ -16,6 +16,8 @@ const ASSET_CACHE = `snack-school-assets-${VERSION}`;
 const SHELL_URLS = [
   "/",
   "/manifest.webmanifest",
+  // A logomarca aparece no topo da tela e no cabeçalho do PDF.
+  "/lancho-mark.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/apple-touch-icon.png",
@@ -58,6 +60,7 @@ function isImmutableAsset(url) {
 function isStaticAsset(url) {
   return (
     url.pathname.startsWith("/icons/") ||
+    url.pathname.startsWith("/lancho-") ||
     url.pathname === "/favicon.ico" ||
     url.pathname === "/manifest.webmanifest"
   );

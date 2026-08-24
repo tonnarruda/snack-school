@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useReducer, useRef } from "react";
+import Image from "next/image";
 import { RotateCcw } from "lucide-react";
 import { CATEGORY_EMOJI } from "@/domain/food";
+import { TAGLINE } from "@/domain/messages";
 import {
   createInitialState,
   issueMessage,
@@ -12,6 +14,33 @@ import {
 import { FoodInput } from "./FoodInput";
 import { UnknownFood } from "./UnknownFood";
 import { WeeklyPlan } from "./WeeklyPlan";
+
+/**
+ * O letreiro da marca, letra a letra nas cores da logomarca.
+ *
+ * É texto, não imagem: fica nítido em qualquer tamanho, acompanha o zoom e o
+ * leitor de tela anuncia "Lanchô" de uma vez só.
+ */
+const WORDMARK = [
+  ["L", "text-lancho-red"],
+  ["a", "text-lancho-orange"],
+  ["n", "text-lancho-green"],
+  ["c", "text-lancho-blue"],
+  ["h", "text-lancho-purple"],
+  ["ô", "text-lancho-pink"],
+] as const;
+
+function Wordmark() {
+  return (
+    <span aria-label="Lanchô">
+      {WORDMARK.map(([letter, color], index) => (
+        <span key={index} className={color} aria-hidden>
+          {letter}
+        </span>
+      ))}
+    </span>
+  );
+}
 
 function Bubble({ message }: { message: ChatMessage }) {
   const isAssistant = message.author === "assistant";
@@ -59,14 +88,19 @@ export function Chat() {
     <>
       <header className="no-print sticky top-0 z-10 -mx-4 flex items-center justify-between gap-3 border-b-2 border-line bg-canvas/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="text-2xl leading-none" aria-hidden>
-            🍎
-          </span>
-          <div>
-            <h1 className="font-display text-base leading-tight font-bold text-ink sm:text-lg">
-              School Snack Planner
+          <Image
+            src="/lancho-mark.png"
+            alt=""
+            width={512}
+            height={512}
+            priority
+            className="size-10 shrink-0 sm:size-11"
+          />
+          <div className="min-w-0">
+            <h1 className="font-display text-xl leading-none font-extrabold sm:text-2xl">
+              <Wordmark />
             </h1>
-            <p className="truncate text-xs text-muted">Monte o lanche da semana</p>
+            <p className="truncate text-xs text-muted">{TAGLINE}</p>
           </div>
         </div>
 

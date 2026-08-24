@@ -17,6 +17,14 @@
   --sun: #f9a826;
   --cold: #2f6fed;
   --cold-soft: #e9f0ff;
+
+  /* Cores da logomarca, uma por letra do letreiro "Lanchô". */
+  --lancho-red: #fc6c6c;
+  --lancho-orange: #fc9048;
+  --lancho-green: #90c054;
+  --lancho-blue: #54b4d8;
+  --lancho-purple: #a86cc0;
+  --lancho-pink: #fc606c;
 }
 
 @theme inline {
@@ -33,6 +41,12 @@
   --color-sun: var(--sun);
   --color-cold: var(--cold);
   --color-cold-soft: var(--cold-soft);
+  --color-lancho-red: var(--lancho-red);
+  --color-lancho-orange: var(--lancho-orange);
+  --color-lancho-green: var(--lancho-green);
+  --color-lancho-blue: var(--lancho-blue);
+  --color-lancho-purple: var(--lancho-purple);
+  --color-lancho-pink: var(--lancho-pink);
   --font-sans: var(--font-nunito);
   --font-display: var(--font-baloo);
 }

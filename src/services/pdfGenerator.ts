@@ -1,7 +1,7 @@
 import type { Suggestion } from "@/data/suggestions";
 import { DAY_THEME, type Rgb } from "@/domain/dayTheme";
 import { CATEGORY_EMOJI, type Food } from "@/domain/food";
-import { COOLER_BAG_NOTICE } from "@/domain/messages";
+import { APP_NAME, COOLER_BAG_NOTICE, TAGLINE } from "@/domain/messages";
 import { daySnackFoods, type DaySnack, type WeeklyPlan } from "@/domain/snack";
 
 /**
@@ -267,6 +267,30 @@ function drawSuggestions(
   return y + height;
 }
 
+/** Caminho da lancheira da logomarca, embutida no cabeçalho do PDF. */
+const MARK_URL = "/lancho-mark.png";
+
+/**
+ * Carrega a marca como data URI. Volta `null` fora do navegador ou se o arquivo
+ * não vier — nesse caso o cabeçalho cai no emoji, como antes.
+ */
+async function loadMark(): Promise<string | null> {
+  try {
+    const response = await fetch(MARK_URL);
+    if (!response.ok) return null;
+
+    const blob = await response.blob();
+    return await new Promise<string | null>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 export interface PdfOptions {
   fileName?: string;
   generatedAt?: Date;
@@ -281,12 +305,19 @@ export async function exportPlanToPdf(
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const emoji = createEmojiRenderer();
 
-  // Cabeçalho, no mesmo tom da tela.
-  drawEmoji(doc, emoji("🍎"), PAGE.margin, PAGE.margin, 9);
+  // Cabeçalho, no mesmo tom da tela: a logomarca e o título.
+  const mark = await loadMark();
+  if (mark) {
+    doc.addImage(mark, "PNG", PAGE.margin - 1, PAGE.margin - 2.5, 15, 15);
+  } else {
+    drawEmoji(doc, emoji("🍎"), PAGE.margin, PAGE.margin, 9);
+  }
+
+  const titleX = PAGE.margin + (mark ? 16 : 11.5);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(19);
   doc.setTextColor(...INK);
-  doc.text("Lanche da semana", PAGE.margin + 11.5, PAGE.margin + 7.4);
+  doc.text("Lanche da semana", titleX, PAGE.margin + 7.4);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
@@ -294,7 +325,7 @@ export async function exportPlanToPdf(
   const generatedAt = options.generatedAt ?? new Date();
   doc.text(
     `Plano de segunda a sexta · gerado em ${generatedAt.toLocaleDateString("pt-BR")}`,
-    PAGE.margin + 11.5,
+    titleX,
     PAGE.margin + 12.4,
   );
 
@@ -342,7 +373,7 @@ export async function exportPlanToPdf(
   doc.setTextColor(...MUTED);
   for (let page = 1; page <= doc.getNumberOfPages(); page += 1) {
     doc.setPage(page);
-    doc.text("School Snack Planner", PAGE.width / 2, PAGE.height - 8, { align: "center" });
+    doc.text(`${APP_NAME} · ${TAGLINE}`, PAGE.width / 2, PAGE.height - 8, { align: "center" });
   }
 
   doc.save(options.fileName ?? "lanche-da-semana.pdf");

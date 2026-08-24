@@ -1,5 +1,9 @@
 /** Textos de domínio reaproveitados pela UI e pelo PDF (PRD §6, §12, §17). */
 
+export const APP_NAME = "Lanchô";
+
+export const TAGLINE = "Seu planejador de lancheiras da semana";
+
 export const INITIAL_QUESTION =
   "Quais alimentos estão disponíveis para montar os lanches desta semana?";
 

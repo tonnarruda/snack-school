@@ -109,7 +109,7 @@ export const FOOD_CATALOG: CatalogEntry[] = [
   { name: "Água de coco", category: "drink", emoji: "🥥", aliases: ["agua de coco", "água-de-coco"] },
   { name: "Iogurte natural", category: "drink", refrigerationRecommended: true, emoji: "🥛", aliases: ["iogurte", "iogurte de beber", "iogurte liquido", "iogurte líquido"] },
   { name: "Iogurte de morango", category: "drink", refrigerationRecommended: true, emoji: "🥛", aliases: ["iogurte de frutas", "iogurte de fruta"] },
-  { name: "Iogurte de ameixa", category: "drink", refrigerationRecommended: true, emoji: "🥛", aliases: ["iogurte de frutas", "iogurte de fruta"] },
+  { name: "Iogurte de ameixa", category: "drink", refrigerationRecommended: true, emoji: "🥛" },
   { name: "Iogurte grego", category: "drink", refrigerationRecommended: true, emoji: "🥛" },
   { name: "Suco de laranja", category: "drink", refrigerationRecommended: true, emoji: "🧃", aliases: ["suco de laranja natural"] },
   { name: "Suco de uva", category: "drink", emoji: "🧃", aliases: ["suco de uva integral"] },

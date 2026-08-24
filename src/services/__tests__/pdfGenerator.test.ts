@@ -41,14 +41,13 @@ describe("PDF do planejamento", () => {
     expect(pageCount(pdf)).toBe(1);
   });
 
-  it("desenha a semana com bebida sem quebrar os cards entre páginas", async () => {
+  it("cabe em uma folha também com a linha da bebida", async () => {
     const pdf = await exportFor(
       "banana, laranja, kiwi, cuscuz, tapioca, cocada, suco de uva, água de coco",
       "com-bebida",
     );
 
-    // Os cards mais altos ainda cabem na primeira folha; só as sugestões podem
-    // transbordar para a segunda.
-    expect(pageCount(pdf)).toBeLessThanOrEqual(2);
+    // Semana + aviso de lancheira térmica + as cinco sugestões, tudo em uma folha.
+    expect(pageCount(pdf)).toBe(1);
   });
 });

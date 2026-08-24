@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { classifyFoods, mergeFoods } from "../foodClassifier";
+import { classifyFoods, findInCatalog, mergeFoods } from "../foodClassifier";
+import { FOOD_CATALOG, FOOD_COMBOS } from "@/data/foods";
+import { normalizeFoodName } from "@/domain/food";
 import { parseFoodInput } from "../foodParser";
 import { buildSuggestions } from "../suggestionEngine";
 import { generateWeeklyPlan } from "../snackPlanner";
@@ -32,6 +34,35 @@ describe("parser de entrada (RF02)", () => {
 
   it("ignora duplicatas e diferenças de acento e caixa", () => {
     expect(parseFoodInput("Banana, banana, BANÂNA").map((item) => item.raw)).toEqual(["Banana"]);
+  });
+});
+
+describe("catálogo", () => {
+  it("não tem o mesmo apelido em duas entradas diferentes", () => {
+    // O índice é um Map: um apelido repetido faz a última entrada esconder a
+    // primeira, e um alimento vira inalcançável sem nenhum aviso.
+    const owner = new Map<string, string>();
+    const collisions: string[] = [];
+
+    for (const entry of [...FOOD_CATALOG, ...FOOD_COMBOS]) {
+      const aliases = "aliases" in entry ? (entry.aliases ?? []) : [];
+      for (const name of [entry.name, ...aliases]) {
+        const key = normalizeFoodName(name);
+        const previous = owner.get(key);
+        if (previous && previous !== entry.name) {
+          collisions.push(`${key}: ${previous} vs ${entry.name}`);
+        }
+        owner.set(key, entry.name);
+      }
+    }
+
+    expect(collisions).toEqual([]);
+  });
+
+  it("mantém cada iogurte alcançável pelo próprio nome", () => {
+    expect(findInCatalog("iogurte de frutas")?.name).toBe("Iogurte de morango");
+    expect(findInCatalog("iogurte de ameixa")?.name).toBe("Iogurte de ameixa");
+    expect(findInCatalog("iogurte")?.name).toBe("Iogurte natural");
   });
 });
 
