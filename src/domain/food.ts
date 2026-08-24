@@ -1,15 +1,18 @@
 /**
  * Domínio de alimentos.
  *
- * O MVP trabalha com apenas três categorias. Idade e localização ainda não são
+ * O MVP trabalha com quatro categorias. Idade e localização ainda não são
  * configuráveis (ver PRD §5), mas o domínio é intencionalmente agnóstico a elas:
  * nada aqui depende de "5 anos" ou "Fortaleza".
  */
 
-export type FoodCategory = "fruit" | "savory" | "sweet";
+export type FoodCategory = "fruit" | "savory" | "sweet" | "drink";
 
 /** Categorias que podem ocupar o lugar do acompanhamento do dia. */
 export const ACCOMPANIMENT_CATEGORIES: FoodCategory[] = ["savory", "sweet"];
+
+/** Ordem canônica das categorias na UI, nas contagens e nas listas. */
+export const FOOD_CATEGORIES: FoodCategory[] = ["fruit", "savory", "sweet", "drink"];
 
 export interface Food {
   /** Chave normalizada (sem acento, minúscula) usada para comparar e deduplicar. */
@@ -31,12 +34,14 @@ export const CATEGORY_LABEL: Record<FoodCategory, string> = {
   fruit: "Fruta",
   savory: "Salgado",
   sweet: "Doce",
+  drink: "Bebida",
 };
 
 export const CATEGORY_EMOJI: Record<FoodCategory, string> = {
   fruit: "🍎",
   savory: "🥪",
   sweet: "🧁",
+  drink: "🥤",
 };
 
 /** Remove acentos, pontuação de borda e espaços extras para comparação. */
@@ -62,4 +67,8 @@ export function isFruit(food: Food): boolean {
 
 export function isAccompaniment(food: Food): boolean {
   return food.category === "savory" || food.category === "sweet";
+}
+
+export function isDrink(food: Food): boolean {
+  return food.category === "drink";
 }

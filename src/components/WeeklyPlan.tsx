@@ -18,6 +18,8 @@ interface WeeklyPlanProps {
 export function WeeklyPlan({ plan, suggestions, onReset }: WeeklyPlanProps) {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  // Sem bebidas informadas, a coluna só ocuparia espaço com traços.
+  const hasDrinks = plan.days.some((day) => day.drink);
 
   async function handleExport() {
     setExporting(true);
@@ -61,6 +63,9 @@ export function WeeklyPlan({ plan, suggestions, onReset }: WeeklyPlanProps) {
                 <th scope="col" className="px-4 py-2 font-bold">Fruta 1</th>
                 <th scope="col" className="px-4 py-2 font-bold">Fruta 2</th>
                 <th scope="col" className="px-4 py-2 font-bold">Salgado/Doce</th>
+                {hasDrinks && (
+                  <th scope="col" className="px-4 py-2 font-bold">Bebida</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -70,6 +75,9 @@ export function WeeklyPlan({ plan, suggestions, onReset }: WeeklyPlanProps) {
                   <td className="px-4 py-2 text-ink">{day.fruits[0].name}</td>
                   <td className="px-4 py-2 text-ink">{day.fruits[1].name}</td>
                   <td className="px-4 py-2 text-ink">{day.accompaniment.name}</td>
+                  {hasDrinks && (
+                    <td className="px-4 py-2 text-ink">{day.drink?.name ?? "—"}</td>
+                  )}
                 </tr>
               ))}
             </tbody>

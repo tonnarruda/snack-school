@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { classifyFoods } from "../foodClassifier";
 import { buildAccompanimentPool, generateWeeklyPlan, validateFoods } from "../snackPlanner";
-import { isAccompaniment, isFruit } from "@/domain/food";
+import { isAccompaniment, isDrink, isFruit } from "@/domain/food";
 import { WEEKDAYS } from "@/domain/snack";
 
 function plan(input: string) {
@@ -121,6 +121,65 @@ describe("acompanhamentos (RF09, RF10)", () => {
     const pool = buildAccompanimentPool(foods);
 
     expect(pool.some((item) => item.parts?.includes("acai"))).toBe(false);
+  });
+});
+
+describe("bebidas", () => {
+  it("dá uma bebida para cada dia quando há bebidas na lista", () => {
+    const { plan: weekly } = plan("banana, laranja, cuscuz, suco de uva, água de coco");
+
+    for (const day of weekly!.days) {
+      expect(day.drink).toBeDefined();
+      expect(isDrink(day.drink!)).toBe(true);
+    }
+  });
+
+  it("monta a semana normalmente sem nenhuma bebida", () => {
+    const { plan: weekly, issues } = plan("banana, laranja, cuscuz");
+
+    expect(issues).toEqual([]);
+    expect(weekly!.days.every((day) => day.drink === undefined)).toBe(true);
+  });
+
+  it("usa todas as bebidas antes de repetir qualquer uma", () => {
+    const { plan: weekly } = plan(
+      "banana, laranja, cuscuz, suco de uva, água de coco, iogurte natural, suco de caju, leite",
+    );
+    const names = weekly!.days.map((day) => day.drink!.name);
+
+    expect(new Set(names).size).toBe(5);
+  });
+
+  it("não repete a mesma bebida em dias consecutivos quando há alternativa", () => {
+    const { plan: weekly } = plan("banana, laranja, cuscuz, suco de uva, água de coco");
+    const names = weekly!.days.map((day) => day.drink!.name);
+
+    expect(names).toEqual([
+      "Suco de uva",
+      "Água de coco",
+      "Suco de uva",
+      "Água de coco",
+      "Suco de uva",
+    ]);
+  });
+
+  it("repete a única bebida informada todos os dias", () => {
+    const { plan: weekly } = plan("banana, laranja, cuscuz, água");
+
+    expect(weekly!.days.map((day) => day.drink!.name)).toEqual(Array(5).fill("Água"));
+  });
+
+  it("a bebida não ocupa o lugar do acompanhamento", () => {
+    const { foods } = classifyFoods("banana, laranja, suco de uva");
+
+    expect(buildAccompanimentPool(foods)).toEqual([]);
+    expect(validateFoods(foods)).toEqual([{ kind: "missing-accompaniment" }]);
+  });
+
+  it("pede lancheira térmica por causa da bebida refrigerada", () => {
+    const { plan: weekly } = plan("banana, laranja, cuscuz, iogurte natural");
+
+    expect(weekly!.requiresCoolerBag).toBe(true);
   });
 });
 

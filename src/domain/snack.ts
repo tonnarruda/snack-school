@@ -14,6 +14,11 @@ export type WeekdayKey = (typeof WEEKDAYS)[number]["key"];
 /** Regra principal: 2 frutas diferentes + 1 salgado OU doce (PRD §9). */
 export const FRUITS_PER_DAY = 2;
 export const ACCOMPANIMENTS_PER_DAY = 1;
+/**
+ * A bebida completa a lancheira, mas é opcional: quem não informar nenhuma
+ * continua recebendo o planejamento normalmente (a regra do PRD §9 não muda).
+ */
+export const DRINKS_PER_DAY = 1;
 
 export interface DaySnack {
   day: WeekdayKey;
@@ -23,6 +28,15 @@ export interface DaySnack {
   fruits: [Food, Food];
   /** Sempre um único acompanhamento (salgado ou doce). */
   accompaniment: Food;
+  /** Uma bebida, quando o usuário informou alguma. */
+  drink?: Food;
+}
+
+/** Todos os alimentos de um dia, na ordem em que aparecem no card. */
+export function daySnackFoods(day: DaySnack): Food[] {
+  return day.drink
+    ? [...day.fruits, day.accompaniment, day.drink]
+    : [...day.fruits, day.accompaniment];
 }
 
 export interface WeeklyPlan {
@@ -39,7 +53,7 @@ export type PlanIssue =
 export function planFoods(plan: WeeklyPlan): Food[] {
   const seen = new Map<string, Food>();
   for (const day of plan.days) {
-    for (const food of [...day.fruits, day.accompaniment]) {
+    for (const food of daySnackFoods(day)) {
       if (!seen.has(food.id)) seen.set(food.id, food);
     }
   }

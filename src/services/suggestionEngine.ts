@@ -21,15 +21,19 @@ function alreadyAvailable(suggestion: Suggestion, owned: Set<string>): boolean {
 
 export function buildSuggestions(foods: Food[], limit = MAX_SUGGESTIONS): Suggestion[] {
   const owned = new Set(foods.map((food) => food.id));
-  const fruitCount = foods.filter((food) => food.category === "fruit").length;
-  const savoryCount = foods.filter((food) => food.category === "savory").length;
-  const sweetCount = foods.filter((food) => food.category === "sweet").length;
+  const count = (category: Suggestion["category"]) =>
+    foods.filter((food) => food.category === category).length;
+
+  const fruitCount = count("fruit");
+  const drinkCount = count("drink");
 
   const scarcity: Record<Suggestion["category"], number> = {
     // Frutas são o gargalo do planejamento: 2 por dia, todos os dias.
     fruit: fruitCount <= FRUITS_PER_DAY ? 0 : fruitCount <= 3 ? 1 : 2,
-    savory: savoryCount === 0 ? 0 : savoryCount <= 2 ? 1 : 2,
-    sweet: sweetCount === 0 ? 0 : sweetCount <= 2 ? 1 : 2,
+    savory: count("savory") === 0 ? 0 : count("savory") <= 2 ? 1 : 2,
+    sweet: count("sweet") === 0 ? 0 : count("sweet") <= 2 ? 1 : 2,
+    // Sem nenhuma bebida, sugerir uma é o conselho mais útil que temos.
+    drink: drinkCount === 0 ? 0 : drinkCount <= 2 ? 1 : 2,
   };
 
   return SUGGESTIONS.filter((suggestion) => !alreadyAvailable(suggestion, owned))

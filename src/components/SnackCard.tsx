@@ -1,6 +1,6 @@
 import { Snowflake } from "lucide-react";
 import { CATEGORY_EMOJI, type Food } from "@/domain/food";
-import type { DaySnack } from "@/domain/snack";
+import { daySnackFoods, type DaySnack } from "@/domain/snack";
 import { DAY_THEME, type DayTheme } from "@/domain/dayTheme";
 
 function FoodTile({
@@ -28,12 +28,10 @@ function FoodTile({
   );
 }
 
-/** Card de um dia: 2 frutas + 1 acompanhamento (PRD §14). */
+/** Card de um dia: 2 frutas + 1 acompanhamento + a bebida, quando houver (PRD §14). */
 export function SnackCard({ day }: { day: DaySnack }) {
   const theme = DAY_THEME[day.day];
-  const needsCooler = [...day.fruits, day.accompaniment].some(
-    (food) => food.refrigerationRecommended,
-  );
+  const needsCooler = daySnackFoods(day).some((food) => food.refrigerationRecommended);
 
   return (
     <article className={`rounded-3xl border-2 p-4 ${theme.card}`}>
@@ -63,6 +61,12 @@ export function SnackCard({ day }: { day: DaySnack }) {
       <div className="mt-2">
         <FoodTile food={day.accompaniment} theme={theme} wide />
       </div>
+
+      {day.drink && (
+        <div className="mt-2">
+          <FoodTile food={day.drink} theme={theme} wide />
+        </div>
+      )}
     </article>
   );
 }

@@ -1,4 +1,4 @@
-import { CATEGORY_LABEL, type Food, type FoodCategory } from "./food";
+import { CATEGORY_LABEL, FOOD_CATEGORIES, isDrink, type Food, type FoodCategory } from "./food";
 import {
   INITIAL_HINT,
   INITIAL_QUESTION,
@@ -6,6 +6,8 @@ import {
   INSUFFICIENT_FRUITS_TITLE,
   MISSING_ACCOMPANIMENT_ACTION,
   MISSING_ACCOMPANIMENT_TITLE,
+  NO_DRINK_ACTION,
+  NO_DRINK_NOTICE,
 } from "./messages";
 import type { PlanIssue, WeeklyPlan } from "./snack";
 import type { Suggestion } from "@/data/suggestions";
@@ -85,11 +87,12 @@ const PLURAL: Record<FoodCategory, [string, string]> = {
   fruit: ["fruta", "frutas"],
   savory: ["salgado", "salgados"],
   sweet: ["doce", "doces"],
+  drink: ["bebida", "bebidas"],
 };
 
-/** "3 frutas, 2 salgados e 1 doce" */
+/** "3 frutas, 2 salgados, 1 doce e 1 bebida" */
 export function describeFoods(foods: Food[]): string {
-  const parts = (["fruit", "savory", "sweet"] as FoodCategory[])
+  const parts = FOOD_CATEGORIES
     .map((category) => {
       const count = foods.filter((food) => food.category === category).length;
       if (count === 0) return null;
@@ -142,12 +145,17 @@ function advance(state: PlannerState): PlannerState {
     return { ...state, stage: "blocked", issues, weeklyPlan: undefined, suggestions: [] };
   }
 
+  // Bebida é opcional: quem não informou nenhuma recebe o convite, não um bloqueio.
+  const hasDrinks = state.foods.some(isDrink);
+
   const next = withMessage(
     { ...state, stage: "ready", issues: [], weeklyPlan: plan, suggestions: buildSuggestions(state.foods) },
     {
       author: "assistant",
       text: "🍎 Prontinho! Este é o lanche da semana.",
-      hint: "Dá para exportar em PDF ou montar uma nova semana quando quiser.",
+      hint: hasDrinks
+        ? "Dá para exportar em PDF ou montar uma nova semana quando quiser."
+        : `🥤 ${NO_DRINK_NOTICE} ${NO_DRINK_ACTION}`,
     },
   );
 

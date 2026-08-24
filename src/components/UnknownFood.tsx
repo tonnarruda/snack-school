@@ -1,6 +1,11 @@
 "use client";
 
-import { CATEGORY_EMOJI, CATEGORY_LABEL, type FoodCategory } from "@/domain/food";
+import {
+  CATEGORY_EMOJI,
+  CATEGORY_LABEL,
+  FOOD_CATEGORIES,
+  type FoodCategory,
+} from "@/domain/food";
 
 interface UnknownFoodProps {
   name: string;
@@ -9,12 +14,11 @@ interface UnknownFoodProps {
   onClassify: (name: string, category: FoodCategory) => void;
 }
 
-const OPTIONS: FoodCategory[] = ["fruit", "savory", "sweet"];
-
 const OPTION_STYLE: Record<FoodCategory, string> = {
   fruit: "border-lime-200 bg-lime-50 hover:border-lime-400",
   savory: "border-amber-200 bg-amber-50 hover:border-amber-400",
   sweet: "border-rose-200 bg-rose-50 hover:border-rose-400",
+  drink: "border-sky-200 bg-sky-50 hover:border-sky-400",
 };
 
 /** Pergunta a categoria de um alimento fora do catálogo (PRD §8). */
@@ -29,8 +33,8 @@ export function UnknownFood({ name, remaining, onClassify }: UnknownFoodProps) {
       </p>
       <p className="mt-0.5 text-sm text-muted">Como devemos classificar?</p>
 
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        {OPTIONS.map((category) => (
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {FOOD_CATEGORIES.map((category) => (
           <button
             key={category}
             type="button"

@@ -35,6 +35,26 @@ describe("parser de entrada (RF02)", () => {
   });
 });
 
+describe("bebidas no catálogo", () => {
+  it("reconhece sucos, iogurtes e água de coco como bebida", () => {
+    const { foods, unknown } = classifyFoods("suco de uva, iogurte, água de coco, agua");
+
+    expect(unknown).toEqual([]);
+    expect(foods.map((food) => [food.name, food.category])).toEqual([
+      ["Suco de uva", "drink"],
+      ["Iogurte natural", "drink"],
+      ["Água de coco", "drink"],
+      ["Água", "drink"],
+    ]);
+  });
+
+  it("não confunde água de coco com a fruta coco", () => {
+    const { foods } = classifyFoods("coco, água de coco");
+
+    expect(foods.map((food) => food.category)).toEqual(["fruit", "drink"]);
+  });
+});
+
 describe("classificação (RF03, RF04)", () => {
   it("reconhece alimentos do catálogo com apelidos e erros de digitação", () => {
     const { foods, unknown } = classifyFoods("pao de queixo, mexerica, sanduiche de queijo, maça");

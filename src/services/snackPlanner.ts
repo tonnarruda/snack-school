@@ -1,9 +1,10 @@
-import { isAccompaniment, isFruit, type Food, type FoodCategory } from "@/domain/food";
+import { isAccompaniment, isDrink, isFruit, type Food, type FoodCategory } from "@/domain/food";
 import { FOOD_COMBOS } from "@/data/foods";
 import { normalizeFoodName } from "@/domain/food";
 import {
   FRUITS_PER_DAY,
   WEEKDAYS,
+  daySnackFoods,
   type DaySnack,
   type PlanIssue,
   type WeeklyPlan,
@@ -187,6 +188,33 @@ function pickAccompaniments(pool: Food[], days: number): Food[] {
   return chosen;
 }
 
+/**
+ * Escolhe a bebida de cada dia: usa todas as informadas antes de repetir
+ * qualquer uma e evita a mesma bebida em dias consecutivos quando há
+ * alternativa. Sem bebidas na lista, os dias ficam sem bebida.
+ */
+function pickDrinks(pool: Food[], days: number): (Food | undefined)[] {
+  if (pool.length === 0) return Array.from({ length: days }, () => undefined);
+
+  const use = new Map<string, number>();
+  const chosen: Food[] = [];
+
+  for (let day = 0; day < days; day += 1) {
+    const previous = chosen[chosen.length - 1];
+    const withoutPrevious = pool.filter((drink) => drink.id !== previous?.id);
+    const candidates = withoutPrevious.length > 0 ? withoutPrevious : pool;
+
+    const pick = candidates.reduce((left, right) =>
+      (use.get(right.id) ?? 0) < (use.get(left.id) ?? 0) ? right : left,
+    );
+
+    chosen.push(pick);
+    use.set(pick.id, (use.get(pick.id) ?? 0) + 1);
+  }
+
+  return chosen;
+}
+
 export interface PlanResult {
   plan?: WeeklyPlan;
   issues: PlanIssue[];
@@ -201,6 +229,7 @@ export function generateWeeklyPlan(foods: Food[]): PlanResult {
 
   const fruitPairs = pickFruitPairs(fruits, WEEKDAYS.length);
   const accompaniments = pickAccompaniments(pool, WEEKDAYS.length);
+  const drinks = pickDrinks(foods.filter(isDrink), WEEKDAYS.length);
 
   const days: DaySnack[] = WEEKDAYS.map((weekday, index) => ({
     day: weekday.key,
@@ -208,10 +237,11 @@ export function generateWeeklyPlan(foods: Food[]): PlanResult {
     longLabel: weekday.longLabel,
     fruits: fruitPairs[index].fruits,
     accompaniment: accompaniments[index],
+    drink: drinks[index],
   }));
 
   const requiresCoolerBag = days.some((day) =>
-    [...day.fruits, day.accompaniment].some((food) => food.refrigerationRecommended),
+    daySnackFoods(day).some((food) => food.refrigerationRecommended),
   );
 
   return { plan: { days, requiresCoolerBag }, issues: [] };

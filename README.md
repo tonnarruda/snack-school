@@ -25,6 +25,11 @@ npm run dev      # http://localhost:3000
 
 Cada dia tem **exatamente 2 frutas diferentes + 1 salgado OU doce**. Sem exceção.
 
+Além disso, cada dia recebe **1 bebida** — suco, iogurte, água de coco, leite —
+quando o usuário informa alguma. A bebida é **opcional**: sem nenhuma na lista, a
+semana é montada do mesmo jeito, só sem a linha da bebida (e o app avisa que dá
+para incluir).
+
 O planejamento é **determinístico**: a mesma lista de alimentos sempre gera a
 mesma semana. As regras não dependem da interpretação de um modelo de IA.
 
@@ -32,6 +37,8 @@ mesma semana. As regras não dependem da interpretação de um modelo de IA.
   demais e o uso é equilibrado entre as frutas informadas;
 - acompanhamentos: alternam salgado e doce quando possível e nunca repetem em
   dias consecutivos se houver alternativa;
+- bebidas: todas as informadas são usadas antes de qualquer repetição e nunca
+  se repetem em dias consecutivos se houver alternativa;
 - quando pão e queijo (ou outras combinações conhecidas) estão disponíveis, eles
   contam como **um** acompanhamento: "Pão com queijo".
 
@@ -59,6 +66,9 @@ página zera tudo — é o comportamento previsto no PRD §20.
 { name: "Melão", category: "fruit", emoji: "🍈", aliases: ["melao"] }
 ```
 
+As categorias são `fruit`, `savory`, `sweet` e `drink`. Só `savory` e `sweet`
+disputam o acompanhamento do dia; `drink` tem lugar próprio no card.
+
 `aliases` cobre variações regionais e erros de digitação — a busca já ignora
 acentos e maiúsculas. `refrigerationRecommended: true` faz o item entrar no aviso
 de lancheira térmica.
@@ -72,7 +82,32 @@ no mesmo arquivo. Frutas nunca são consumidas por combinações.
 Idade e localização ainda não são configuráveis, mas nada no domínio depende
 delas — a evolução prevista no PRD §5 não exige reescrever as regras.
 
+## PWA
+
+O app é instalável na tela inicial e funciona offline depois da primeira visita.
+
+- [`src/app/manifest.ts`](src/app/manifest.ts) — manifest (nome, ícones, cores,
+  `display: standalone`). É uma rota, por isso o `dynamic = "force-static"`
+  exigido pelo `output: "export"`.
+- [`public/sw.js`](public/sw.js) — service worker: navegação com _network-first_
+  (cai no cache quando não há rede), `/_next/static/` com _cache-first_ (nomes
+  versionados por hash) e ícones com _stale-while-revalidate_.
+  **Ao alterar esse arquivo, suba a constante `VERSION`** — é ela que descarta os
+  caches antigos na ativação.
+- [`src/components/ServiceWorkerRegistrar.tsx`](src/components/ServiceWorkerRegistrar.tsx)
+  — registra o worker, só em produção (em `next dev` ele serviria cache por cima
+  do HMR).
+
+Como o estado vive em memória (PRD §20), "offline" significa abrir e montar a
+semana sem rede — não retomar um planejamento anterior.
+
+Testar: `npm run build && npx serve out` e, no Chrome DevTools, aba Network >
+Offline. Instalação exige **HTTPS** (localhost também vale).
+
 ## Deploy
 
 `npm run build` gera `out/`, uma pasta estática que pode ser servida por
 qualquer hospedagem (Vercel, Netlify, GitHub Pages, S3).
+
+O `sw.js` deve ser servido sem cache de longa duração (`Cache-Control:
+no-cache`), senão o navegador pode demorar a ver uma versão nova do worker.

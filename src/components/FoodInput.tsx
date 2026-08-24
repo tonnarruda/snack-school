@@ -42,7 +42,7 @@ export function FoodInput({ onSubmit, mode = "create", disabled }: FoodInputProp
         rows={3}
         autoFocus
         disabled={disabled}
-        placeholder="Banana, laranja, pão, queijo..."
+        placeholder="Banana, laranja, pão, queijo, suco de uva..."
         className="w-full resize-y rounded-3xl border-2 border-line bg-surface px-4 py-3 text-base text-ink outline-none transition placeholder:text-muted/60 focus:border-brand disabled:opacity-60"
       />
 

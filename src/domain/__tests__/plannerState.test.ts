@@ -5,7 +5,7 @@ import {
   plannerReducer,
   type PlannerState,
 } from "../plannerState";
-import { INITIAL_QUESTION } from "../messages";
+import { INITIAL_QUESTION, NO_DRINK_NOTICE } from "../messages";
 
 function run(state: PlannerState, ...inputs: string[]): PlannerState {
   return inputs.reduce(
@@ -104,5 +104,28 @@ describe("resumo dos alimentos", () => {
   it("descreve as categorias em português", () => {
     const state = run(createInitialState(), "banana, laranja, cuscuz, tapioca, cocada");
     expect(describeFoods(state.foods)).toBe("2 frutas, 2 salgados e 1 doce");
+  });
+
+  it("conta as bebidas junto das demais categorias", () => {
+    const state = run(createInitialState(), "banana, laranja, cuscuz, suco de uva, água de coco");
+    expect(describeFoods(state.foods)).toBe("2 frutas, 1 salgado e 2 bebidas");
+  });
+});
+
+describe("bebidas no fluxo", () => {
+  it("avisa, sem bloquear, quando a semana sai sem bebida", () => {
+    const state = run(createInitialState(), "banana, laranja, cuscuz");
+    const last = state.messages[state.messages.length - 1];
+
+    expect(state.stage).toBe("ready");
+    expect(last.hint).toContain(NO_DRINK_NOTICE);
+  });
+
+  it("não avisa quando há bebida na lista", () => {
+    const state = run(createInitialState(), "banana, laranja, cuscuz, suco de uva");
+    const last = state.messages[state.messages.length - 1];
+
+    expect(state.weeklyPlan!.days[0].drink?.name).toBe("Suco de uva");
+    expect(last.hint).not.toContain(NO_DRINK_NOTICE);
   });
 });

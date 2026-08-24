@@ -2,7 +2,7 @@ import type { Suggestion } from "@/data/suggestions";
 import { DAY_THEME, type Rgb } from "@/domain/dayTheme";
 import { CATEGORY_EMOJI, type Food } from "@/domain/food";
 import { COOLER_BAG_NOTICE } from "@/domain/messages";
-import type { DaySnack, WeeklyPlan } from "@/domain/snack";
+import { daySnackFoods, type DaySnack, type WeeklyPlan } from "@/domain/snack";
 
 /**
  * Gera o PDF do planejamento inteiramente no navegador (PRD §18).
@@ -19,7 +19,35 @@ const PAGE = { width: 210, height: 297, margin: 12 };
 const CONTENT_WIDTH = PAGE.width - PAGE.margin * 2;
 const CARD_GAP = 4;
 const CARD_WIDTH = (CONTENT_WIDTH - CARD_GAP) / 2;
-const CARD_HEIGHT = 52;
+const BOTTOM_LIMIT = PAGE.height - PAGE.margin;
+
+interface CardLayout {
+  height: number;
+  pillY: number;
+  fruits: { y: number; height: number };
+  accompaniment: { y: number; height: number };
+  drink?: { y: number; height: number };
+}
+
+/**
+ * Dois layouts de card. O de bebida é mais apertado de propósito: com a linha
+ * extra ele ainda precisa caber, com as cinco sugestões, em uma única folha —
+ * o plano é feito para imprimir e colar na geladeira.
+ */
+const CARD_LAYOUT: CardLayout = {
+  height: 52,
+  pillY: 4,
+  fruits: { y: 13, height: 20 },
+  accompaniment: { y: 36, height: 12 },
+};
+
+const CARD_LAYOUT_WITH_DRINK: CardLayout = {
+  height: 58,
+  pillY: 3.5,
+  fruits: { y: 11, height: 20 },
+  accompaniment: { y: 33, height: 11 },
+  drink: { y: 46, height: 11 },
+};
 
 const INK: Rgb = [43, 35, 32];
 const MUTED: Rgb = [123, 106, 93];
@@ -119,19 +147,27 @@ function drawFoodTile(
   });
 }
 
+/** Abre uma página nova quando o bloco não cabe no que resta da atual. */
+function ensureSpace(doc: Doc, y: number, needed: number): number {
+  if (y + needed <= BOTTOM_LIMIT) return y;
+  doc.addPage();
+  return PAGE.margin;
+}
+
 function drawDayCard(
   doc: Doc,
   day: DaySnack,
   emoji: EmojiRenderer,
   x: number,
   y: number,
+  layout: CardLayout,
 ) {
   const theme = DAY_THEME[day.day];
 
   doc.setFillColor(...theme.pdf.bg);
   doc.setDrawColor(...theme.pdf.border);
   doc.setLineWidth(0.7);
-  doc.roundedRect(x, y, CARD_WIDTH, CARD_HEIGHT, 4.5, 4.5, "FD");
+  doc.roundedRect(x, y, CARD_WIDTH, layout.height, 4.5, 4.5, "FD");
 
   // Pílula colorida com o dia.
   const label = day.label.toUpperCase();
@@ -139,40 +175,49 @@ function drawDayCard(
   doc.setFontSize(8);
   const pillWidth = doc.getTextWidth(label) + 8;
   doc.setFillColor(...theme.pdf.badge);
-  doc.roundedRect(x + 4, y + 4, pillWidth, 6.2, 3.1, 3.1, "F");
+  doc.roundedRect(x + 4, y + layout.pillY, pillWidth, 6.2, 3.1, 3.1, "F");
   doc.setTextColor(...WHITE);
-  doc.text(label, x + 4 + pillWidth / 2, y + 8.4, { align: "center" });
+  doc.text(label, x + 4 + pillWidth / 2, y + layout.pillY + 4.4, { align: "center" });
 
-  const needsCooler = [...day.fruits, day.accompaniment].some(
-    (food) => food.refrigerationRecommended,
-  );
+  const needsCooler = daySnackFoods(day).some((food) => food.refrigerationRecommended);
   if (needsCooler) {
     doc.setFontSize(6.5);
     const badge = "térmica";
     const badgeWidth = doc.getTextWidth(badge) + 9;
     doc.setFillColor(...WHITE);
-    doc.roundedRect(x + CARD_WIDTH - 4 - badgeWidth, y + 4, badgeWidth, 6.2, 3.1, 3.1, "F");
-    drawEmoji(doc, emoji("❄️"), x + CARD_WIDTH - 4 - badgeWidth + 1.6, y + 5.2, 4);
+    doc.roundedRect(
+      x + CARD_WIDTH - 4 - badgeWidth, y + layout.pillY, badgeWidth, 6.2, 3.1, 3.1, "F",
+    );
+    drawEmoji(doc, emoji("❄️"), x + CARD_WIDTH - 4 - badgeWidth + 1.6, y + layout.pillY + 1.2, 4);
     doc.setTextColor(...COLD);
-    doc.text(badge, x + CARD_WIDTH - 4 - badgeWidth + 6.4, y + 8.3);
+    doc.text(badge, x + CARD_WIDTH - 4 - badgeWidth + 6.4, y + layout.pillY + 4.3);
   }
 
   const tileWidth = (CARD_WIDTH - 8 - 3) / 2;
   day.fruits.forEach((fruit, index) => {
     drawFoodTile(doc, fruit, emoji, theme.pdf.border, {
       x: x + 4 + index * (tileWidth + 3),
-      y: y + 13,
+      y: y + layout.fruits.y,
       width: tileWidth,
-      height: 20,
+      height: layout.fruits.height,
     }, "stacked");
   });
 
   drawFoodTile(doc, day.accompaniment, emoji, theme.pdf.border, {
     x: x + 4,
-    y: y + 36,
+    y: y + layout.accompaniment.y,
     width: CARD_WIDTH - 8,
-    height: 12,
+    height: layout.accompaniment.height,
   }, "wide");
+
+  if (day.drink && layout.drink) {
+    drawFoodTile(doc, day.drink, emoji, theme.pdf.border, {
+      x: x + 4,
+      y: y + layout.drink.y,
+      width: CARD_WIDTH - 8,
+      height: layout.drink.height,
+    }, "wide");
+  }
 }
 
 function drawSuggestions(
@@ -255,17 +300,24 @@ export async function exportPlanToPdf(
 
   let y = PAGE.margin + 18;
 
-  plan.days.forEach((day, index) => {
-    const column = index % 2;
-    const x = PAGE.margin + column * (CARD_WIDTH + CARD_GAP);
-    drawDayCard(doc, day, emoji, x, y);
-    if (column === 1) y += CARD_HEIGHT + CARD_GAP;
-  });
+  // Todos os cards seguem o mesmo layout, mesmo que só alguns dias tenham bebida.
+  const layout = plan.days.some((day) => day.drink)
+    ? CARD_LAYOUT_WITH_DRINK
+    : CARD_LAYOUT;
 
-  // O quinto card fica sozinho na última linha.
-  if (plan.days.length % 2 === 1) y += CARD_HEIGHT + CARD_GAP;
+  // Duas colunas por linha; o quinto card fica sozinho na última.
+  for (let index = 0; index < plan.days.length; index += 2) {
+    y = ensureSpace(doc, y, layout.height);
+
+    plan.days.slice(index, index + 2).forEach((day, column) => {
+      drawDayCard(doc, day, emoji, PAGE.margin + column * (CARD_WIDTH + CARD_GAP), y, layout);
+    });
+
+    y += layout.height + CARD_GAP;
+  }
 
   if (plan.requiresCoolerBag) {
+    y = ensureSpace(doc, y, 11);
     doc.setFillColor(...COLD_SOFT);
     doc.setDrawColor(...COLD_SOFT);
     const noticeHeight = 11;
@@ -281,13 +333,17 @@ export async function exportPlanToPdf(
   }
 
   if (suggestions.length > 0) {
+    y = ensureSpace(doc, y, 14 + Math.ceil(suggestions.length / 2) * 13);
     y = drawSuggestions(doc, suggestions, emoji, y) + CARD_GAP;
   }
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...MUTED);
-  doc.text("School Snack Planner", PAGE.width / 2, PAGE.height - 8, { align: "center" });
+  for (let page = 1; page <= doc.getNumberOfPages(); page += 1) {
+    doc.setPage(page);
+    doc.text("School Snack Planner", PAGE.width / 2, PAGE.height - 8, { align: "center" });
+  }
 
   doc.save(options.fileName ?? "lanche-da-semana.pdf");
 }
