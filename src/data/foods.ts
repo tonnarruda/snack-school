@@ -24,6 +24,7 @@ export const FOOD_CATALOG: CatalogEntry[] = [
   { name: "Manga", category: "fruit", emoji: "🥭", aliases: ["manga espada", "manga tommy"] },
   { name: "Caju", category: "fruit", emoji: "🍐" },
   { name: "Maçã", category: "fruit", emoji: "🍎", aliases: ["maca", "maça", "maçã gala"] },
+  { name: "Maçã vermelha", category: "fruit", emoji: "🍎", aliases: ["maca vermelha", "maça vermelha", "maçã vermelha"] },
   { name: "Maçã verde", category: "fruit", emoji: "🍏", aliases: ["maca verde", "aça verde", "aca verde"] },
   { name: "Pera", category: "fruit", emoji: "🍐" },
   { name: "Uva", category: "fruit", emoji: "🍇", aliases: ["uvas"] },

@@ -1,5 +1,5 @@
 /**
- * Service worker do School Snack Planner.
+ * Service worker do Lanchô.
  *
  * O app é um site estático sem backend, então tudo que ele precisa para rodar
  * cabe no cache: uma vez visitado, abre offline (na correria da manhã, com
@@ -9,8 +9,8 @@
  * na ativação.
  */
 const VERSION = "v2";
-const SHELL_CACHE = `snack-school-shell-${VERSION}`;
-const ASSET_CACHE = `snack-school-assets-${VERSION}`;
+const SHELL_CACHE = `lancho-shell-${VERSION}`;
+const ASSET_CACHE = `lancho-assets-${VERSION}`;
 
 /** Mínimo para a primeira renderização offline. */
 const SHELL_URLS = [

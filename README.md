@@ -94,8 +94,9 @@ no topo da tela e o do cabeçalho do PDF. O letreiro "Lanchô" do cabeçalho é
 **texto**, colorido letra a letra com os tokens `--lancho-*` de
 [`globals.css`](src/app/globals.css), para ficar nítido em qualquer tamanho.
 
-Os ícones em `public/icons/` são derivados da marca; para regerá-los depois de
-trocar a arte, use o script guardado no histórico desta mudança (PIL/Pillow).
+Os ícones em `public/icons/` e o favicon são derivados da arte por
+[`scripts/generate-brand-assets.py`](scripts/generate-brand-assets.py) — trocou a
+logo? Substitua `lancho-logo.png` e rode o script (precisa de Pillow).
 
 ## PWA
 
